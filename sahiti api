@@ -1,0 +1,151 @@
+const express = require('express');
+const { MongoClient, ObjectId } = require('mongodb');
+
+// MongoDB connection details
+const mongoURI = 'mongodb://localhost:27017';
+const dbName = 'your-db-name';
+const collectionName = 'packers_players';
+
+// Create Express app
+const app = express();
+app.use(express.json());
+
+// MongoDB Client
+let db;
+
+// Connect to MongoDB
+MongoClient.connect(mongoURI, { useUnifiedTopology: true })
+  .then((client) => {
+    db = client.db(dbName);
+    console.log('Connected to MongoDB');
+  })
+  .catch((err) => {
+    console.error('Error connecting to MongoDB:', err);
+  });
+
+// Add player
+app.post('/players', (req, res) => {
+  const player = req.body;
+  db.collection(collectionName)
+    .insertOne(player)
+    .then(() => {
+      res.sendStatus(201);
+    })
+    .catch((err) => {
+      console.error('Error adding player:', err);
+      res.sendStatus(500);
+    });
+});
+
+// Update player
+app.put('/players/:id', (req, res) => {
+  const playerId = req.params.id;
+  const updatedPlayer = req.body;
+  db.collection(collectionName)
+    .updateOne({ _id: ObjectId(playerId) }, { $set: updatedPlayer })
+    .then(() => {
+      res.sendStatus(200);
+    })
+    .catch((err) => {
+      console.error('Error updating player:', err);
+      res.sendStatus(500);
+    });
+});
+
+// Delete player
+app.delete('/players/:id', (req, res) => {
+  const playerId = req.params.id;
+  db.collection(collectionName)
+    .deleteOne({ _id: ObjectId(playerId) })
+    .then(() => {
+      res.sendStatus(200);
+    })
+    .catch((err) => {
+      console.error('Error deleting player:', err);
+      res.sendStatus(500);
+    });
+});
+
+// Get player with most touchdown passes
+app.get('/players/most-touchdowns', (req, res) => {
+  db.collection(collectionName)
+    .find()
+    .sort({ touchdownsThrown: -1 })
+    .limit(1)
+    .toArray()
+    .then((players) => {
+      res.json(players[0]);
+    })
+    .catch((err) => {
+      console.error('Error retrieving player with most touchdown passes:', err);
+      res.sendStatus(500);
+    });
+});
+
+// Get player with most rushing yards
+app.get('/players/most-rushing-yards', (req, res) => {
+  db.collection(collectionName)
+    .find()
+    .sort({ rushingYards: -1 })
+    .limit(1)
+    .toArray()
+    .then((players) => {
+      res.json(players[0]);
+    })
+    .catch((err) => {
+      console.error('Error retrieving player with most rushing yards:', err);
+      res.sendStatus(500);
+    });
+});
+
+// Get player with least rushing yards
+app.get('/players/least-rushing-yards', (req, res) => {
+  db.collection(collectionName)
+    .find()
+    .sort({ rushingYards: 1 })
+    .limit(1)
+    .toArray()
+    .then((players) => {
+      res.json(players[0]);
+    })
+    .catch((err) => {
+      console.error('Error retrieving player with least rushing yards:', err);
+      res.sendStatus(500);
+    });
+});
+
+// Get list of players sorted by field goals made
+app.get('/players/sorted-field-goals', (req, res) => {
+  db.collection(collectionName)
+    .find()
+    .sort({ fieldGoalsMade: -1 })
+    .toArray()
+    .then((players) => {
+      res.json(players);
+    })
+    .catch((err) => {
+      console.error('Error retrieving list of players sorted by field goals made:', err);
+      res.sendStatus(500);
+    });
+});
+
+// Get player with most sacks
+app.get('/players/most-sacks', (req, res) => {
+  db.collection(collectionName)
+    .find()
+    .sort({ sacks: -1 })
+    .limit(1)
+    .toArray()
+    .then((players) => {
+      res.json(players[0]);
+    })
+    .catch((err) => {
+      console.error('Error retrieving player with most sacks:', err);
+      res.sendStatus(500);
+    });
+});
+
+// Start the server
+app.listen(3000, () => {
+  console.log('Server listening on port 3000');
+});
